@@ -1,0 +1,64 @@
+version: '3.7'
+services:
+  db:
+    container_name: db_foodgram
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    image: postgres:13-alpine
+    volumes:
+      - pg_data_r:/var/lib/postgresql/data
+    env_file:
+      - .env
+    command: -p ${POSTGRES_PORT}
+
+  backend:
+    container_name: backend_foodgram
+    ports:
+      - ${BACKEND_PORT}:${BACKEND_PORT}
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    restart: always
+    command: "sh ./entrypoint.sh"
+    volumes:
+      - ../backend:/backend
+      - staticfiles_i:/var/www/static/
+      - media_i:/var/www/media/
+    depends_on:
+      - db
+
+  frontend:
+    container_name: frontend_foodgram
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    volumes:
+      - front_build_i:/app/result_build/build
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:1.19.3
+    container_name: nginx_foodgram
+    restart: unless-stopped
+    ports:
+      - ${NGINX_PORT}:${NGINX_PORT}
+    volumes:
+      - ./nginx.dev.conf:/etc/nginx/templates/default.conf.template
+      - staticfiles_i:/var/www/static/
+      - media_i:/var/www/media/
+      - front_build_i:/usr/share/nginx/html/
+      - ../docs/:/usr/share/nginx/html/api/docs/
+    depends_on:
+      - frontend
+    env_file:
+      - .env
+
+
+volumes:
+  staticfiles_i:
+  media_i:
+  pg_data_r:
+  front_build_i:
