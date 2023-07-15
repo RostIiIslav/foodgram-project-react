@@ -1,17 +1,56 @@
-version: '3.3'
+version: '3.7'
 services:
+  db:
+    container_name: db_foodgram
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    image: postgres:13-alpine
+    volumes:
+      - db:/var/lib/postgresql/data
+    env_file:
+      - .env
+    command: -p ${POSTGRES_PORT}
+
+  backend:
+    container_name: backend_foodgram
+    image: rostiislav/foodgram_backend:latest
+    ports:
+      - ${BACKEND_PORT}:${BACKEND_PORT}
+
+    env_file:
+      - .env
+    restart: always
+    command: "sh ./entrypoint.sh"
+    volumes:
+      - staticfiles:/var/www/static/
+      - media:/var/www/media/
+    depends_on:
+      - db
 
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-    volumes:
-      - ../frontend/:/app/result_build/
+    container_name: frontend_foodgram
+    image: rostiislav/foodgram_frontend:latest
+    depends_on:
+      - backend
+
   nginx:
     image: nginx:1.19.3
+    container_name: nginx_foodgram
+    restart: unless-stopped
     ports:
-      - "80:80"
+      - ${NGINX_PORT}:${NGINX_PORT}
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx.conf:/etc/nginx/templates/default.conf.template
+      - staticfiles:/var/html/static/
+      - media:/var/html/media/
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
+    depends_on:
+      - frontend
+    env_file:
+      - .env
+
+volumes:
+  staticfiles:
+  media:
+  db:

@@ -10,6 +10,9 @@ from rest_framework.validators import UniqueTogetherValidator
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
 from users.models import User
 
+MIN_INGREDIENT_AMOUNT = 0
+MAX_INGREDIENT_AMOUNT = 1000
+
 
 class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
@@ -23,9 +26,8 @@ class CustomUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        if user.is_anonymous:
-            return False
-        return obj.author_subscriptions.filter(user=user).exists()
+        return not user.is_anonymous and \
+            obj.author_subscriptions.filter(user=user).exists()
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -72,8 +74,8 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context['request'].user
         if user.check_password(value):
             return value
-        else:
-            raise serializers.ValidationError(
+
+        raise serializers.ValidationError(
                 'Старый пароль не совпадает'
             )
 
@@ -81,13 +83,13 @@ class ChangePasswordSerializer(serializers.Serializer):
 class IngredientsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = '__all__'
+        fields = ('id', 'name', 'measurement_unit')
 
 
 class TagsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = '__all__'
+        fields = ('id', 'name', 'color', 'slug')
 
 
 class RecipeIngredientsSerializer(serializers.ModelSerializer):
@@ -151,15 +153,12 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user
-        if user.is_anonymous:
-            return False
-        return obj.favorites.filter(user=user).exists()
+        return not user.is_anonymous and \
+            obj.favorites.filter(user=user).exists()
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
-        if user.is_anonymous:
-            return False
-        return obj.carts.filter(user=user).exists()
+        return not user.is_anonymous and obj.carts.filter(user=user).exists()
 
 
 class RecipeCreateSerializer(RecipeSerializer):
@@ -173,10 +172,16 @@ class RecipeCreateSerializer(RecipeSerializer):
         fields = ('id', 'name', 'text', 'image', 'tags', 'ingredients',
                   'cooking_time', 'is_favorited', 'is_in_shopping_cart')
 
-    def validate_tags(self, data):
-        if not data['tags']:
+    def validate_tags(self, tags):
+        if not tags:
             raise serializers.ValidationError('Нужны тэги')
-        return data
+        unique_tags = []
+        for tag in tags:
+            if tag.id in unique_tags:
+                continue
+            unique_tags.append(tag)
+
+        return unique_tags
 
     def create(self, validated_data):
         tags = validated_data.pop('tags', [])
@@ -205,7 +210,8 @@ class RecipeCreateSerializer(RecipeSerializer):
 
     def validate_ingredients(self, ingredients):
         for ingredient in ingredients:
-            if not (0 < ingredient['amount'] < 1000):
+            if not (MIN_INGREDIENT_AMOUNT <
+                    ingredient['amount'] < MAX_INGREDIENT_AMOUNT):
                 raise serializers.ValidationError(
                     'Неверное кол-во ингредиентов')
         return ingredients
