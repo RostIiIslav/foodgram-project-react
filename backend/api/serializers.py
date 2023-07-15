@@ -26,8 +26,8 @@ class CustomUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        return not user.is_anonymous and \
-            obj.author_subscriptions.filter(user=user).exists()
+        return (not user.is_anonymous and
+                obj.author_subscriptions.filter(user=user).exists())
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -75,9 +75,7 @@ class ChangePasswordSerializer(serializers.Serializer):
         if user.check_password(value):
             return value
 
-        raise serializers.ValidationError(
-                'Старый пароль не совпадает'
-            )
+        raise serializers.ValidationError('Старый пароль не совпадает')
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
@@ -153,8 +151,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user
-        return not user.is_anonymous and \
-            obj.favorites.filter(user=user).exists()
+        return (not user.is_anonymous and
+                obj.favorites.filter(user=user).exists())
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
@@ -210,8 +208,8 @@ class RecipeCreateSerializer(RecipeSerializer):
 
     def validate_ingredients(self, ingredients):
         for ingredient in ingredients:
-            if not (MIN_INGREDIENT_AMOUNT <
-                    ingredient['amount'] < MAX_INGREDIENT_AMOUNT):
+            amount = ingredient['amount']
+            if not (MIN_INGREDIENT_AMOUNT < amount < MAX_INGREDIENT_AMOUNT):
                 raise serializers.ValidationError(
                     'Неверное кол-во ингредиентов')
         return ingredients
