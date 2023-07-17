@@ -16,11 +16,10 @@ services:
     image: rostiislav/foodgram_backend:latest
     ports:
       - ${BACKEND_PORT}:${BACKEND_PORT}
-
+    entrypoint: 'python3 manage.py collectstatic --noinput --clear'
     env_file:
       - .env
     restart: always
-    command: "sh ./entrypoint.sh"
     volumes:
       - staticfiles:/var/www/static/
       - media:/var/www/media/

@@ -9,6 +9,11 @@ admin.site.register(Tag)
 admin.site.register(Cart)
 
 
+class IngredientInline(admin.TabularInline):
+    model = Recipe.ingredients.through
+    min_num = 1
+
+
 class IngredientAdmin(admin.ModelAdmin):
     list_filter = ('name',)
     list_display = ('name', 'measurement_unit')
@@ -17,6 +22,9 @@ class IngredientAdmin(admin.ModelAdmin):
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'favorites')
     list_filter = ('author', 'name', 'tags')
+    inlines = (
+        IngredientInline,
+    )
 
     def favorites(self, obj):
         return obj.favorites.count()

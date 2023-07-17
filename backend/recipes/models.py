@@ -1,5 +1,7 @@
 from colorfield.fields import ColorField
 from django.db import models
+from django.db.models.functions import Lower
+from rest_framework.exceptions import ValidationError
 
 from users.models import User
 
@@ -30,7 +32,7 @@ class Tag(models.Model):
 
 
 class Recipe(models.Model):
-    text = models.TextField('Описание')
+    text = models.TextField('Описание', unique=True)
     name = models.CharField('Название', max_length=90)
     image = models.ImageField('Изображение', upload_to='recipes/')
     tags = models.ManyToManyField(Tag, verbose_name='Теги',
@@ -65,12 +67,31 @@ class IngredientRecipe(models.Model):
         Ingredient, verbose_name='Ингредиент', on_delete=models.CASCADE,
         related_name='recipe_ingredients')
 
+    class Meta:
+        ordering = ['-id']
+        verbose_name = 'Рецепт и Ингридиент'
+        verbose_name_plural = 'Рецепты и Ингридиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='recipe_ingredient_unique'
+            )
+        ]
+
 
 class Cart(models.Model):
     user = models.ForeignKey(User, verbose_name='Кому принадлежат покупки',
                              on_delete=models.CASCADE, related_name='carts')
     recipe = models.ForeignKey(Recipe, verbose_name='Рецепт',
                                on_delete=models.CASCADE, related_name='carts')
+
+    def clean(self):
+        if Cart.objects.filter(user=self.user, recipe=self.recipe).exists():
+            raise ValidationError('Рецепт уже есть в корзине')
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     class Meta:
         ordering = ('-id',)
@@ -89,9 +110,24 @@ class Favorite(models.Model):
                                on_delete=models.CASCADE,
                                related_name='favorites')
 
+    def clean(self):
+        if Favorite.objects.filter(user=self.user,
+                                   recipe=self.recipe).exists():
+            raise ValidationError('Рецепт уже есть в избранном')
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='favorite_recipe_user_unique'
+            )
+        ]
 
     def __str__(self):
         return f'Рецепт {self.recipe} Пользователь {self.user}'
