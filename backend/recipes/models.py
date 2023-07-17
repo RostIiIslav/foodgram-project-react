@@ -1,6 +1,5 @@
 from colorfield.fields import ColorField
 from django.db import models
-from django.db.models.functions import Lower
 from rest_framework.exceptions import ValidationError
 
 from users.models import User

@@ -3,7 +3,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 
-
 class User(AbstractUser):
     email = models.EmailField(verbose_name="Email", unique=True)
     username = models.CharField('Никнейм', unique=True, max_length=20)
