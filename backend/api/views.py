@@ -47,6 +47,7 @@ class RecipesPagination(PageNumberPagination):
     page_size_query_param = 'limit'
     max_page_size = 10
 
+
 class IsAuthorRecipe(BasePermission):
     def has_permission(self, request, view):
         return view.get_object().author == request.user
