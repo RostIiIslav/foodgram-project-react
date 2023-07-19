@@ -1,5 +1,6 @@
 from colorfield.fields import ColorField
 from django.db import models
+from django.conf import settings
 from rest_framework.exceptions import ValidationError
 
 from users.models import User
@@ -14,7 +15,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        return self.name[:50]
+        return self.name[:settings.LIMIT_VIEW_SYMBOLS]
 
 
 class Tag(models.Model):
@@ -27,7 +28,7 @@ class Tag(models.Model):
         verbose_name_plural = 'Теги'
 
     def __str__(self):
-        return self.name[:50]
+        return self.name[:settings.LIMIT_VIEW_SYMBOLS]
 
 
 class Recipe(models.Model):
@@ -53,7 +54,7 @@ class Recipe(models.Model):
         verbose_name_plural = 'Рецепты'
 
     def __str__(self):
-        return self.name[:50]
+        return self.name[:settings.LIMIT_VIEW_SYMBOLS]
 
 
 class IngredientRecipe(models.Model):
@@ -67,7 +68,7 @@ class IngredientRecipe(models.Model):
         related_name='recipe_ingredients')
 
     class Meta:
-        ordering = ['-id']
+        ordering = ('-id',)
         verbose_name = 'Рецепт и Ингридиент'
         verbose_name_plural = 'Рецепты и Ингридиенты'
         constraints = [
@@ -108,15 +109,6 @@ class Favorite(models.Model):
     recipe = models.ForeignKey(Recipe, verbose_name='Рецепт',
                                on_delete=models.CASCADE,
                                related_name='favorites')
-
-    def clean(self):
-        if Favorite.objects.filter(user=self.user,
-                                   recipe=self.recipe).exists():
-            raise ValidationError('Рецепт уже есть в избранном')
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Избранное'

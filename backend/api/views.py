@@ -5,8 +5,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticated, BasePermission,
+    IsAuthenticatedOrReadOnly)
+
 from rest_framework.response import Response
 
 from api.filters import RecipeFilter, IngredientsFilter
@@ -45,14 +47,25 @@ class RecipesPagination(PageNumberPagination):
     page_size_query_param = 'limit'
     max_page_size = 10
 
+class IsAuthorRecipe(BasePermission):
+    def has_permission(self, request, view):
+        return view.get_object().author == request.user
+
 
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = RecipesPagination
+    permission_classes = (IsAuthorRecipe,)
+
+    def get_permissions(self):
+        if self.action in ['update', 'destroy', 'partial_update', 'partial']:
+            permission_classes = (IsAuthenticated, IsAuthorRecipe)
+        else:
+            permission_classes = (IsAuthenticatedOrReadOnly,)
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:

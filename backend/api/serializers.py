@@ -207,7 +207,13 @@ class RecipeCreateSerializer(RecipeSerializer):
         return instance
 
     def validate_ingredients(self, ingredients):
+        ingredient_ids = []
+        validate_ingredients = []
         for ingredient in ingredients:
+            if ingredient['ingredient'].id in ingredient_ids:
+                continue
+            ingredient_ids.append(ingredient['ingredient'].id)
+            validate_ingredients.append(ingredient)
             amount = ingredient['amount']
             if not (MIN_INGREDIENT_AMOUNT < amount < MAX_INGREDIENT_AMOUNT):
                 raise serializers.ValidationError(

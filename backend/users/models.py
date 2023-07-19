@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.conf import settings
 
 
 class User(AbstractUser):
@@ -14,7 +15,7 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
 
     def __str__(self):
-        return self.username[:50]
+        return self.username[:settings.LIMIT_VIEW_SYMBOLS]
 
 
 class Subscription(models.Model):
