@@ -19,15 +19,23 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
+    COLOR_PALETTE = [
+        ("#FFFFFF", "white"),
+        ("#000000", "black"),
+        ("#FFA07A", "LightSalmon"),
+        ("#00FF00", "Lime"),
+        ("#808000", "Olive"),
+        ("#7FFFD4", "Aquamarine")
+    ]
     name = models.CharField('Название', unique=True, max_length=40)
     slug = models.SlugField('tag', unique=True)
-    color = ColorField('hex', default='#FF0000', unique=True)
+    color = ColorField('hex', choices=COLOR_PALETTE, unique=True)
 
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
-    def __str__(self):
+    def str(self):
         return self.name[:settings.LIMIT_VIEW_SYMBOLS]
 
 
