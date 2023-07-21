@@ -77,6 +77,7 @@ class IngredientRecipe(models.Model):
                 name='recipe_ingredient_unique'
             )
         ]
+
     def __str__(self):
         return f'Рецепт {self.recipe} Ингредиент {self.ingredient}'
 
