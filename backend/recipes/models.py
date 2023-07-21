@@ -19,23 +19,15 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
-    COLOR_PALETTE = [
-        ("#FFFFFF", "white"),
-        ("#000000", "black"),
-        ("#FFA07A", "LightSalmon"),
-        ("#00FF00", "Lime"),
-        ("#808000", "Olive"),
-        ("#7FFFD4", "Aquamarine")
-    ]
     name = models.CharField('Название', unique=True, max_length=40)
     slug = models.SlugField('tag', unique=True)
-    color = ColorField('hex', choices=COLOR_PALETTE, unique=True)
+    color = ColorField(verbose_name='hex', unique=True)
 
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
-    def str(self):
+    def __str__(self):
         return self.name[:settings.LIMIT_VIEW_SYMBOLS]
 
 
@@ -85,6 +77,8 @@ class IngredientRecipe(models.Model):
                 name='recipe_ingredient_unique'
             )
         ]
+    def __str__(self):
+        return f'Рецепт {self.recipe} Ингредиент {self.ingredient}'
 
 
 class Cart(models.Model):
