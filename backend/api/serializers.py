@@ -211,7 +211,8 @@ class RecipeCreateSerializer(RecipeSerializer):
         validate_ingredients = []
         for ingredient in ingredients:
             if ingredient['ingredient'].id in ingredient_ids:
-                continue
+                raise serializers.ValidationError(
+                    'Уберите дубликаты ингредиентов')
             ingredient_ids.append(ingredient['ingredient'].id)
             validate_ingredients.append(ingredient)
             amount = ingredient['amount']

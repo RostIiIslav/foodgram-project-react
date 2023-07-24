@@ -27,6 +27,10 @@ class Tag(models.Model):
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
+    def save(self, *args, **kwargs):
+        self.color = self.color.upper()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name[:settings.LIMIT_VIEW_SYMBOLS]
 
@@ -77,7 +81,6 @@ class IngredientRecipe(models.Model):
                 name='recipe_ingredient_unique'
             )
         ]
-
     def __str__(self):
         return f'Рецепт {self.recipe} Ингредиент {self.ingredient}'
 

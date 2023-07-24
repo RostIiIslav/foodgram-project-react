@@ -2,7 +2,7 @@
 <summary>Project stack</summary>
 
 - Python 3.7
-- Django 2.1
+- Django 3.2.10
 - Django REST Framework 
 - Djoser 
 - Pillow
